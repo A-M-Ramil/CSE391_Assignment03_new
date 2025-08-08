@@ -1,11 +1,9 @@
 <?php
-// Set timezone to Bangladesh (GMT+6)
 date_default_timezone_set('Asia/Dhaka');
 
 require_once 'db.php';
 
 session_start();
-
 
 $admin_username = 'admin';
 $admin_password = 'admin123@bracu@bd';
@@ -31,7 +29,6 @@ if (isset($_GET['logout'])) {
     exit();
 }
 
-
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     try {
         $pdo = getDBConnection();
@@ -45,7 +42,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                     $message = "Appointment marked as completed successfully!";
                 }
                 break;
-                
             case 'delete_appointment':
                 $appointment_id = $_POST['appointment_id'] ?? '';
                 if (!empty($appointment_id)) {
@@ -54,7 +50,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                     $message = "Appointment cancelled successfully!";
                 }
                 break;
-                
             case 'swap_appointment':
                 $appointment_id = $_POST['appointment_id'] ?? '';
                 $new_mechanic_id = $_POST['new_mechanic_id'] ?? '';
@@ -62,7 +57,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 $new_date = $_POST['new_date'] ?? '';
                 
                 if (!empty($appointment_id) && !empty($new_mechanic_id) && !empty($new_time_slot) && !empty($new_date)) {
-                    // Check if new slot is available
                     $stmt = $pdo->prepare("SELECT check_mechanic_availability(?, ?, ?) as is_available");
                     $stmt->execute([$new_mechanic_id, $new_date, $new_time_slot]);
                     $result = $stmt->fetch();
@@ -82,7 +76,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     }
 }
 
-// Get mechanics for dropdown
 try {
     $pdo = getDBConnection();
     $stmt = $pdo->query("SELECT mechanic_id, name FROM mechanics WHERE is_active = TRUE ORDER BY mechanic_id");
@@ -91,11 +84,9 @@ try {
     $mechanics = [];
 }
 
-// Get current date for filtering
 $current_date = $_GET['date'] ?? date('Y-m-d');
 $selected_mechanic = $_GET['mechanic_id'] ?? '';
 
-// Get appointments data
 $appointments = [];
 $mechanic_status = [];
 
@@ -103,7 +94,6 @@ if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in']) {
     try {
         $pdo = getDBConnection();
         
-        // Get all appointments for the selected date
         $where_conditions = ["a.appointment_date = ?"];
         $params = [$current_date];
         
@@ -124,7 +114,6 @@ if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in']) {
         $stmt->execute($params);
         $appointments = $stmt->fetchAll();
         
-        // Get mechanic status for all mechanics
         $stmt = $pdo->prepare("
             SELECT 
                 m.mechanic_id,
@@ -192,7 +181,6 @@ if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in']) {
        
         <main class="body">
             
-            
             <?php if (!isset($_SESSION['admin_logged_in']) || !$_SESSION['admin_logged_in']): ?>
                 
                 <div class="login-form">
@@ -220,7 +208,6 @@ if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in']) {
                 </div>
                 
             <?php else: ?>
-                <!-- Admin Dashboard -->
                 <div class="admin-container">
                     <div class="header">
                         <h1>Admin Panel</h1>
@@ -238,7 +225,6 @@ if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in']) {
                         <div class="message error"><?php echo htmlspecialchars($error); ?></div>
                     <?php endif; ?>
                     
-                    <!-- Filters -->
                     <div class="filters">
                         <div class="form-group">
                             <label for="date">Date:</label>
@@ -249,7 +235,6 @@ if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in']) {
                         
                     </div>
                     
-                    <!-- Mechanic Status Overview -->
                     <h2>Mechanic Status for <?php echo date('F j, Y', strtotime($current_date)); ?></h2>
                     <div class="mechanic-grid">
                         <?php foreach ($mechanic_status as $mechanic): ?>
@@ -297,7 +282,6 @@ if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in']) {
                                 <?php endforeach; ?>
                             </select>
                         </div>
-                    <!-- Appointments Table -->
                     <h2>Appointments for <?php echo date('F j, Y', strtotime($current_date)); ?></h2>
                     
                     <?php if (empty($appointments)): ?>
@@ -360,8 +344,6 @@ if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in']) {
                         </table>
                     <?php endif; ?>
                 </div>
-                
-                <!-- Swap Appointment Modal -->
                 <div id="swapModal" class="modal">
                     <div class="modal-content">
                         <span class="close" onclick="closeSwapModal()">&times;</span>
@@ -369,7 +351,6 @@ if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in']) {
                         <form method="POST" action="">
                             <input type="hidden" name="action" value="swap_appointment">
                             <input type="hidden" name="appointment_id" id="swap_appointment_id">
-                            
                             <div class="form-group">
                                 <label for="new_mechanic_id">New Mechanic:</label>
                                 <select id="new_mechanic_id" name="new_mechanic_id" required>
@@ -381,12 +362,10 @@ if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in']) {
                                     <?php endforeach; ?>
                                 </select>
                             </div>
-                            
                             <div class="form-group">
                                 <label for="new_date">New Date:</label>
                                 <input type="date" id="new_date" name="new_date" required min="<?php echo date('Y-m-d'); ?>">
                             </div>
-                            
                             <div class="form-group">
                                 <label for="new_time_slot">New Time Slot:</label>
                                 <select id="new_time_slot" name="new_time_slot" required>
@@ -397,13 +376,11 @@ if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in']) {
                                     <option value="16-18">4:00 PM - 6:00 PM</option>
                                 </select>
                             </div>
-                            
                             <button type="submit" class="btn">Swap Appointment</button>
                             <button type="button" class="btn btn-danger" onclick="closeSwapModal()">Cancel</button>
                         </form>
                     </div>
                 </div>
-                
                 <script>
                     function completeAppointment(appointmentId) {
                         if (confirm('Are you sure you want to mark this appointment as completed?')) {
@@ -417,7 +394,6 @@ if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in']) {
                             form.submit();
                         }
                     }
-                    
                     function deleteAppointment(appointmentId) {
                         if (confirm('Are you sure you want to delete this appointment?')) {
                             const form = document.createElement('form');
@@ -430,7 +406,6 @@ if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in']) {
                             form.submit();
                         }
                     }
-                    
                     function showSwapModal(appointmentId, currentMechanicId, currentTimeSlot, currentDate) {
                         document.getElementById('swap_appointment_id').value = appointmentId;
                         document.getElementById('new_mechanic_id').value = currentMechanicId;
@@ -438,12 +413,9 @@ if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in']) {
                         document.getElementById('new_time_slot').value = currentTimeSlot;
                         document.getElementById('swapModal').style.display = 'block';
                     }
-                    
                     function closeSwapModal() {
                         document.getElementById('swapModal').style.display = 'none';
                     }
-                    
-                    // Close modal when clicking outside
                     window.onclick = function(event) {
                         const modal = document.getElementById('swapModal');
                         if (event.target === modal) {

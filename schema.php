@@ -1,15 +1,10 @@
 <?php
-/**
- * Database Schema for Car Mechanic Booking System
- * Creates tables for clients, mechanics, and appointments
- */
 
 require_once 'db.php';
 
 try {
     $pdo = getDBConnection();
     
-    // Create clients table
     $createClientsTable = "
     CREATE TABLE IF NOT EXISTS clients (
         id SERIAL PRIMARY KEY,
@@ -22,7 +17,6 @@ try {
     );
     ";
     
-    // Create mechanics table with predefined 5 mechanics
     $createMechanicsTable = "
     CREATE TABLE IF NOT EXISTS mechanics (
         id SERIAL PRIMARY KEY,
@@ -33,7 +27,6 @@ try {
     );
     ";
     
-    // Create appointments table
     $createAppointmentsTable = "
     CREATE TABLE IF NOT EXISTS appointments (
         id SERIAL PRIMARY KEY,
@@ -50,11 +43,9 @@ try {
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (mechanic_id) REFERENCES mechanics(mechanic_id),
         UNIQUE(mechanic_id, appointment_date, time_slot)
-        -- Removed foreign key constraint for client_phone to allow non-registered users
     );
     ";
     
-    // Create mechanic_schedule table to track daily capacity
     $createMechanicScheduleTable = "
     CREATE TABLE IF NOT EXISTS mechanic_schedule (
         id SERIAL PRIMARY KEY,
@@ -69,13 +60,11 @@ try {
     );
     ";
     
-    // Execute table creation
     $pdo->exec($createClientsTable);
     $pdo->exec($createMechanicsTable);
     $pdo->exec($createAppointmentsTable);
     $pdo->exec($createMechanicScheduleTable);
     
-    // Insert predefined 5 mechanics
     $insertMechanics = "
     INSERT INTO mechanics (mechanic_id, name) VALUES
     (1, 'Mech1'),
@@ -88,7 +77,6 @@ try {
     
     $pdo->exec($insertMechanics);
     
-    // Create indexes for better performance
     $createIndexes = "
     CREATE INDEX IF NOT EXISTS idx_appointments_client_phone ON appointments(client_phone);
     CREATE INDEX IF NOT EXISTS idx_appointments_mechanic_date ON appointments(mechanic_id, appointment_date);
@@ -98,7 +86,6 @@ try {
     
     $pdo->exec($createIndexes);
     
-    // Create function to check mechanic availability for specific time slot
     $createAvailabilityFunction = "
     CREATE OR REPLACE FUNCTION check_mechanic_availability(
         p_mechanic_id INTEGER,
@@ -124,7 +111,6 @@ try {
     
     $pdo->exec($createAvailabilityFunction);
     
-    // Create function to find next available slot for a mechanic
     $createNextAvailableFunction = "
     CREATE OR REPLACE FUNCTION find_next_available_slot(
         p_mechanic_id INTEGER,

@@ -1,5 +1,4 @@
 <?php
-// Set timezone to Bangladesh (GMT+6)
 date_default_timezone_set('Asia/Dhaka');
 
 require_once 'db.php';
@@ -7,12 +6,10 @@ require_once 'db.php';
 $message = '';
 $error = '';
 
-// Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
         $pdo = getDBConnection();
         
-        // Get form data
         $client_phone = $_POST['client_phone'] ?? '';
         $client_name = $_POST['client_name'] ?? '';
         $client_address = $_POST['client_address'] ?? '';
@@ -22,14 +19,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $appointment_date = $_POST['appointment_date'] ?? '';
         $time_slot = $_POST['time_slot'] ?? '';
         
-        // Validate required fields
         if (empty($client_phone) || empty($client_name) || empty($client_address) || 
             empty($car_license_number) || empty($car_engine_number) || empty($mechanic_id) || 
             empty($appointment_date) || empty($time_slot)) {
             throw new Exception("All required fields must be filled.");
         }
         
-        // Check if the appointment is for today and if the time slot has already passed
         $today = date('Y-m-d');
         $current_time = date('H:i');
         
@@ -47,7 +42,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
         
-        // Check if mechanic is available for the selected time slot
         $stmt = $pdo->prepare("SELECT check_mechanic_availability(?, ?, ?) as is_available");
         $stmt->execute([$mechanic_id, $appointment_date, $time_slot]);
         $result = $stmt->fetch();
@@ -56,7 +50,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             throw new Exception("This time slot is already booked. Please select a different time slot.");
         }
         
-        // Check if the same car (engine number) is already booked with another mechanic for the same time slot
         $stmt = $pdo->prepare("
             SELECT COUNT(*) as car_booked_count 
             FROM appointments 
@@ -72,7 +65,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             throw new Exception("This car is already booked with another mechanic for the same time slot. Please select a different time slot or date.");
         }
         
-        // Insert appointment
         $stmt = $pdo->prepare("
             INSERT INTO appointments (
                 client_phone, client_name, client_address, car_license_number, 
@@ -85,9 +77,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $car_engine_number, $mechanic_id, $appointment_date, $time_slot
         ]);
         
-        // Update mechanic_schedule table to track daily capacity
         try {
-            // Check if schedule entry exists for this mechanic and date
             $stmt = $pdo->prepare("
                 INSERT INTO mechanic_schedule (mechanic_id, schedule_date, current_appointments)
                 VALUES (?, ?, 1)
@@ -96,8 +86,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ");
             $stmt->execute([$mechanic_id, $appointment_date]);
         } catch (Exception $e) {
-            // If schedule update fails, appointment is still valid
-            // Just log the error but don't fail the booking
         }
         
         $message = "Appointment booked successfully! Your appointment ID is: " . $pdo->lastInsertId();
@@ -107,7 +95,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Get available mechanics
 try {
     $pdo = getDBConnection();
     $stmt = $pdo->query("SELECT mechanic_id, name FROM mechanics WHERE is_active = TRUE ORDER BY mechanic_id");
@@ -116,7 +103,6 @@ try {
     $mechanics = [];
 }
 
-// Get available time slots for selected mechanic and date
 $available_slots = [];
 $selected_mechanic = $_GET['mechanic_id'] ?? '';
 $selected_date = $_GET['appointment_date'] ?? '';
@@ -125,18 +111,15 @@ if (!empty($selected_mechanic) && !empty($selected_date)) {
     try {
         $pdo = getDBConnection();
         
-        // Check if selected date is today
         $today = date('Y-m-d');
         $current_time = date('H:i');
         $is_today = ($selected_date === $today);
         
-        // Get all time slots
         $all_slots = ['8-10', '11-13', '14-16', '16-18'];
         
         foreach ($all_slots as $slot) {
             $status = 'Available';
             
-            // Check if slot has passed for today
             if ($is_today) {
                 $slot_start_time = '';
                 switch($slot) {
@@ -151,7 +134,6 @@ if (!empty($selected_mechanic) && !empty($selected_date)) {
                 }
             }
             
-            // If not passed, check availability
             if ($status !== 'Passed') {
                 $stmt = $pdo->prepare("SELECT check_mechanic_availability(?, ?, ?) as is_available");
                 $stmt->execute([$selected_mechanic, $selected_date, $slot]);
@@ -160,8 +142,6 @@ if (!empty($selected_mechanic) && !empty($selected_date)) {
                 if (!$result['is_available']) {
                     $status = 'Booked';
                 } else {
-                    // Check if any car is already booked for this time slot (for display purposes)
-                    // This helps users see if the slot is generally available
                     $stmt = $pdo->prepare("
                         SELECT COUNT(*) as car_booked_count 
                         FROM appointments 
@@ -172,7 +152,6 @@ if (!empty($selected_mechanic) && !empty($selected_date)) {
                     $stmt->execute([$selected_date, $slot]);
                     $car_result = $stmt->fetch();
                     
-                    // If any car is booked for this slot, show as "Limited" (car-specific booking)
                     if ($car_result['car_booked_count'] > 0) {
                         $status = 'Limited';
                     }
@@ -384,7 +363,6 @@ if (!empty($selected_mechanic) && !empty($selected_date)) {
             const appointmentDate = document.getElementById('appointment_date').value;
             
             if (mechanicId && appointmentDate) {
-                // Reload page with selected mechanic and date to show availability
                 window.location.href = `book-appointment.php?mechanic_id=${mechanicId}&appointment_date=${appointmentDate}`;
             }
         }

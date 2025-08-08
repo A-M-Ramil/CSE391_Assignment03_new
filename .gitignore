@@ -1,53 +1,24 @@
-# Node modules (if any JS tooling is used)
 node_modules/
-
-# Composer dependencies (if used)
 vendor/
-
-# OS generated files
 .DS_Store
 Thumbs.db
-
-# IDE and editor folders
 .vscode/
 .idea/
 *.sublime-workspace
 *.sublime-project
-
-# Log files
 *.log
-
-# Environment files
 .env
 .env.*
-
-# Backup and temp files
 *~
 *.swp
 *.bak
-
-# PHPStorm
 .phpstorm.meta.php
-
-# Uploaded files (if any)
 uploads/
-
-# Ignore image caches or generated images
 *.cache
-
-# Ignore compiled CSS/JS (if any build tools are used)
 dist/
 build/
-
-# Ignore test output
 coverage/
-
-# Ignore database files
 *.sqlite
 *.db
-
-# Ignore Windows system files
 Desktop.ini
-
-# Ignore any local configuration
 local.php

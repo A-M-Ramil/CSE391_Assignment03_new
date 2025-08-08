@@ -5,7 +5,7 @@ $appointments = [];
 $error = '';
 $phone_number = '';
 
-// Handle form submission
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $phone_number = $_POST['phone_number'] ?? '';
     
@@ -15,7 +15,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         try {
             $pdo = getDBConnection();
             
-            // Get all appointments for the phone number
             $stmt = $pdo->prepare("
                 SELECT 
                     a.id,
